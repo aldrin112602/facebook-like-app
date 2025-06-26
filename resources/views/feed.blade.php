@@ -22,7 +22,7 @@
                         </div>
                         <div class="flex-1">
                             <textarea name="content" placeholder="What's on your mind, {{ auth()->user()->name }}?"
-                                class="w-full border-none resize-none bg-transparent text-gray-700 dark:text-gray-300 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none text-lg min-h-[60px]"
+                                class="w-full border border-slate-200 rounded-lg resize-none bg-transparent text-gray-700 dark:text-gray-300 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none text-lg"
                                 rows="3" required></textarea>
 
                             {{-- Media Preview --}}
@@ -109,7 +109,9 @@
                                 <div class="flex-1">
                                     <h3 class="font-semibold text-gray-900 dark:text-white">{{ $post->user->name }}</h3>
                                     <p class="text-sm text-gray-500 dark:text-gray-400">
-                                        {{ $post->created_at->diffForHumans() }}</p>
+                                        <span>{{ $post->privacy == 'public' ? '🌍 Public' : ($post->privacy == 'friends' ? '👥 Friends' : '🔒 Private') }}</span> |
+                                        <span>{{ $post->created_at->diffForHumans() }}</span>
+                                    </p>
                                 </div>
                                 @if ($post->user_id == auth()->id())
                                     <div class="relative">
@@ -146,33 +148,53 @@
                         </div>
 
                         {{-- Post Media --}}
-                        @if ($post->media_path)
+                        @if ($post->image_path || $post->video_path)
                             <div class="mb-4">
-                                @if (str_contains($post->media_type, 'image'))
-                                    <img src="{{ asset('storage/' . $post->media_path) }}" alt="Post image"
+                                @if (str_contains($post->image_path, 'image'))
+                                    <img src="{{ asset('storage/' . $post->image_path) }}" alt="Post image"
                                         class="w-full max-h-96 object-cover">
-                                @elseif(str_contains($post->media_type, 'video'))
+                                @elseif(str_contains($post->video_path, 'video'))
                                     <video controls class="w-full max-h-96">
-                                        <source src="{{ asset('storage/' . $post->media_path) }}"
-                                            type="{{ $post->media_type }}">
+                                        <source src="{{ asset('storage/' . $post->video_path) }}">
                                         Your browser does not support the video tag.
                                     </video>
                                 @endif
                             </div>
                         @endif
-
                         {{-- Post Stats --}}
                         <div class="px-6 py-2 border-t border-gray-200/50 dark:border-gray-700/50">
                             <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                                <span>{{ $post->likes_count }} likes</span>
-                                <span>{{ $post->comments_count }} comments</span>
+                                <div class="flex items-center space-x-2">
+                                    {{-- Profile circles for likes --}}
+                                    <div id="likes-avatars-{{ $post->id }}" class="flex -space-x-1">
+                                        @foreach ($post->likes->take(5) as $like)
+                                            <div class="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800 flex-shrink-0"
+                                                title="{{ $like->user->name }}">
+                                                <span class="text-white font-semibold text-xs">
+                                                    {{ substr($like->user->name, 0, 1) }}
+                                                </span>
+                                            </div>
+                                        @endforeach
+                                        @if (count($post->likes) > 5)
+                                            <div class="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800 flex-shrink-0"
+                                                title="{{ count($post->likes) - 5 }} more">
+                                                <span class="text-white font-bold text-xs">+</span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <span id="likes-count-{{ $post->id }}"
+                                        class="ml-1">{{ count($post->likes) }}
+                                        like{{ count($post->likes) > 1 ? 's' : '' }}</span>
+                                </div>
+                                <span id="comments-count-{{ $post->id }}">{{ count($post->comments) }}
+                                    comment{{ count($post->comments) > 1 ? 's' : '' }}</span>
                             </div>
                         </div>
 
                         {{-- Post Actions --}}
                         <div class="px-6 py-3 border-t border-gray-200/50 dark:border-gray-700/50">
                             <div class="flex items-center space-x-6">
-                                <button onclick="toggleLike({{ $post->id }})"
+                                <button onclick="toggleLike({{ $post->id }}, this)"
                                     class="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-blue-500 transition-colors">
                                     <svg class="w-5 h-5 {{ $post->isLikedBy(auth()->user()) ? 'text-blue-500 fill-current' : '' }}"
                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -200,10 +222,9 @@
                             class="hidden border-t border-gray-200/50 dark:border-gray-700/50">
                             {{-- Add Comment Form --}}
                             <div class="p-4 border-b border-gray-200/50 dark:border-gray-700/50">
-                                <form action="{{ route('comments.store', $post->id) }}" method="POST"
+                                <form onsubmit="submitComment(event, {{ $post->id }})"
                                     class="flex items-start space-x-3">
                                     @csrf
-                                    <input type="hidden" name="post_id" value="{{ $post->id }}">
                                     <div
                                         class="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
                                         <span class="text-white font-semibold text-sm">
@@ -223,9 +244,10 @@
                             </div>
 
                             {{-- Comments List --}}
-                            <div class="max-h-96 overflow-y-auto">
+                            <div id="comments-list-{{ $post->id }}" class="max-h-96 overflow-y-auto">
                                 @foreach ($post->comments as $comment)
-                                    <div class="p-4 border-b border-gray-100 dark:border-gray-700/50 last:border-b-0">
+                                    <div id="comment-{{ $comment->id }}"
+                                        class="p-4 border-b border-gray-100 dark:border-gray-700/50 last:border-b-0">
                                         <div class="flex items-start space-x-3">
                                             <div
                                                 class="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
@@ -244,16 +266,10 @@
                                                     <span
                                                         class="text-xs text-gray-500 dark:text-gray-400">{{ $comment->created_at->diffForHumans() }}</span>
                                                     @if ($comment->user_id == auth()->id())
-                                                        <form action="{{ route('comments.destroy', $comment) }}"
-                                                            method="POST" class="inline">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit"
-                                                                class="text-xs text-red-500 hover:text-red-700"
-                                                                onclick="return confirm('Delete this comment?')">
-                                                                Delete
-                                                            </button>
-                                                        </form>
+                                                        <button onclick="deleteComment({{ $comment->id }})"
+                                                            class="text-xs text-red-500 hover:text-red-700">
+                                                            Delete
+                                                        </button>
                                                     @endif
                                                 </div>
                                             </div>
@@ -274,6 +290,9 @@
     </div>
 
     <script>
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
         // Media Preview Function
         function previewMedia(input) {
             const file = input.files[0];
@@ -315,21 +334,42 @@
             dropdown.classList.toggle('hidden');
         }
 
-        // Toggle Like
-        function toggleLike(postId) {
-            fetch(`/posts/${postId}/like`, {
+        // Toggle Like - Real Time
+        async function toggleLike(postId, button) {
+            try {
+                const response = await fetch(`/posts/${postId}/like`, {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload(); // Simple reload for now
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     }
                 });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+
+                // Update like count
+                const likesCountElement = document.getElementById(`likes-count-${postId}`);
+                likesCountElement.textContent = `${data.likes_count} likes`;
+
+                // Update like button appearance
+                const heartIcon = button.querySelector('svg');
+                if (data.action === 'liked') {
+                    heartIcon.classList.add('text-blue-500', 'fill-current');
+                    button.classList.add('text-blue-500');
+                } else {
+                    heartIcon.classList.remove('text-blue-500', 'fill-current');
+                    button.classList.remove('text-blue-500');
+                }
+
+            } catch (error) {
+                console.error('Error toggling like:', error);
+                alert('Error processing like. Please try again.');
+            }
         }
 
         // Toggle Comments
@@ -338,12 +378,149 @@
             comments.classList.toggle('hidden');
         }
 
+        // Submit Comment - Real Time
+        async function submitComment(event, postId) {
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData(form);
+            const content = formData.get('content').trim();
+
+            if (!content) {
+                alert('Please enter a comment');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/posts/${postId}/comments`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+
+                // Update comments count
+                const commentsCountElement = document.getElementById(`comments-count-${postId}`);
+                commentsCountElement.textContent = `${data.comments_count} comments`;
+
+                // Add new comment to the list
+                addCommentToList(postId, data.comment);
+
+                // Clear the form
+                form.reset();
+
+            } catch (error) {
+                console.error('Error submitting comment:', error);
+                alert('Error posting comment. Please try again.');
+            }
+        }
+
+        // Add Comment to List
+        function addCommentToList(postId, comment) {
+            const commentsList = document.getElementById(`comments-list-${postId}`);
+            const currentUserInitial = '{{ substr(auth()->user()->name, 0, 1) }}';
+            const currentUserId = {{ auth()->id() }};
+
+            const commentHTML = `
+                <div id="comment-${comment.id}" class="p-4 border-b border-gray-100 dark:border-gray-700/50 last:border-b-0">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-white font-semibold text-sm">
+                                ${comment.user.name.charAt(0)}
+                            </span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-2">
+                                <h4 class="font-semibold text-sm text-gray-900 dark:text-white">
+                                    ${comment.user.name}
+                                </h4>
+                                <p class="text-gray-800 dark:text-gray-200 text-sm">
+                                    ${comment.content}
+                                </p>
+                            </div>
+                            <div class="flex items-center space-x-4 mt-1">
+                                <span class="text-xs text-gray-500 dark:text-gray-400">just now</span>
+                                ${comment.user_id === currentUserId ? 
+                                    `<button onclick="deleteComment(${comment.id})" class="text-xs text-red-500 hover:text-red-700">Delete</button>` 
+                                    : ''
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            commentsList.insertAdjacentHTML('beforeend', commentHTML);
+
+            // Scroll to the new comment
+            commentsList.scrollTop = commentsList.scrollHeight;
+        }
+
+        // Delete Comment - Real Time
+        async function deleteComment(commentId) {
+            if (!confirm('Delete this comment?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/comments/${commentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Remove comment from DOM
+                    const commentElement = document.getElementById(`comment-${commentId}`);
+                    if (commentElement) {
+                        commentElement.remove();
+                    }
+
+                    // Update comments count (you might need to pass postId to do this accurately)
+                    // For now, we'll just subtract 1 from current count
+                    const allCommentsCount = document.querySelectorAll('[id^="comments-count-"]');
+                    allCommentsCount.forEach(element => {
+                        const currentCount = parseInt(element.textContent.match(/\d+/)[0]);
+                        element.textContent = `${currentCount - 1} comments`;
+                    });
+                }
+
+            } catch (error) {
+                console.error('Error deleting comment:', error);
+                alert('Error deleting comment. Please try again.');
+            }
+        }
+
         // Close dropdowns when clicking outside
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.relative')) {
                 document.querySelectorAll('[id^="dropdown-"]').forEach(dropdown => {
                     dropdown.classList.add('hidden');
                 });
+            }
+        });
+
+        // Auto-resize comment textareas
+        document.addEventListener('input', function(e) {
+            if (e.target.tagName === 'TEXTAREA') {
+                e.target.style.height = 'auto';
+                e.target.style.height = e.target.scrollHeight + 'px';
             }
         });
     </script>

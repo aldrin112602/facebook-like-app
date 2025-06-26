@@ -13,6 +13,8 @@ class PostController extends Controller
         $posts = Post::with(['user', 'likes', 'comments.user'])
                     ->latest()
                     ->paginate(10);
+
+        // dd($posts);
         
         return view('feed', compact('posts'));
     }
