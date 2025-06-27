@@ -8,9 +8,11 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\FriendController;
 use App\Http\Controllers\MessageController;
 
+
+
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('homepage');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
