@@ -29,9 +29,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
 
-    Route::get('/friends', [FriendController::class, 'index'])->name('friends.index');
-    Route::post('/friends/add', [FriendController::class, 'add'])->name('friends.add');
-    Route::delete('/friends/{id}', [FriendController::class, 'remove'])->name('friends.remove');
+    // Friend routes
+    Route::prefix('friends')->name('friends.')->group(function () {
+        Route::get('/', [FriendController::class, 'index'])->name('index');
+        Route::post('/request', [FriendController::class, 'sendRequest'])->name('request');
+        Route::post('/accept/{id}', [FriendController::class, 'acceptRequest'])->name('accept');
+        Route::delete('/decline/{id}', [FriendController::class, 'declineRequest'])->name('decline');
+        Route::delete('/remove/{id}', [FriendController::class, 'remove'])->name('remove');
+    });
 
 
     Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
