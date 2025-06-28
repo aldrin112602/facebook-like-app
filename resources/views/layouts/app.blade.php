@@ -25,15 +25,15 @@
 
         <!-- Page Heading -->
         @isset($header)
-            <header class="bg-white dark:bg-gray-800 shadow" style="margin-top: 4rem;">
-                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <header class="fixed w-full top-0 left-0 dark:bg-gray-800 bg-white shadow" style="margin-top: 4rem;">
+                <div class="mx-auto py-6 px-4 sm:px-6 lg:px-8 max-w-7xl">
                     {{ $header }}
                 </div>
             </header>
         @endisset
 
         <!-- Page Content -->
-        <main>
+        <main  style="margin-top: 8rem;">
             {{ $slot }}
         </main>
     </div>

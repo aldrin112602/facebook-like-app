@@ -39,7 +39,7 @@
 
     <div class="py-6">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg flex flex-col h-[600px]">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg flex flex-col h-[545px]">
                 {{-- Messages Area --}}
                 <div class="flex-1 overflow-y-auto p-6 space-y-4" id="messages-container">
                     @if ($messages->count() > 0)
@@ -97,8 +97,8 @@
                 </div>
 
                 {{-- Message Input --}}
-                <div class="border-t dark:border-gray-700 p-4">
-                    <form action="{{ route('messages.send') }}" method="POST" class="flex space-x-4">
+                <div class=" dark:border-gray-700 p-4 fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow">
+                    <form action="{{ route('messages.send') }}" method="POST" class="flex space-x-4 w-full md:w-1/2 mx-auto">
                         @csrf
                         <input type="hidden" name="recipient_id" value="{{ $friend->id }}">
                         <div class="flex flex-1 w-full justify-between items-center ">

@@ -102,14 +102,14 @@
                             <div class="flex items-center space-x-3">
                                 <div
                                     class="w-12 h-12 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <span class="text-white font-semibold text-lg">
-                                        {{ substr($post->user->name, 0, 1) }}
-                                    </span>
+                                    <span
+                                        class="text-white font-semibold text-lg">{{ substr($post->user->name, 0, 1) }}</span>
                                 </div>
                                 <div class="flex-1">
                                     <h3 class="font-semibold text-gray-900 dark:text-white">{{ $post->user->name }}</h3>
                                     <p class="text-sm text-gray-500 dark:text-gray-400">
-                                        <span>{{ $post->privacy == 'public' ? '🌍 Public' : ($post->privacy == 'friends' ? '👥 Friends' : '🔒 Private') }}</span> |
+                                        <span>{{ $post->privacy == 'public' ? '🌍 Public' : ($post->privacy == 'friends' ? '👥 Friends' : '🔒 Private') }}</span>
+                                        |
                                         <span>{{ $post->created_at->diffForHumans() }}</span>
                                     </p>
                                 </div>
@@ -150,10 +150,10 @@
                         {{-- Post Media --}}
                         @if ($post->image_path || $post->video_path)
                             <div class="mb-4">
-                                @if (str_contains($post->image_path, 'image'))
+                                @if ($post->image_path && str_contains($post->image_path, 'image'))
                                     <img src="{{ asset('storage/' . $post->image_path) }}" alt="Post image"
                                         class="w-full max-h-96 object-cover">
-                                @elseif(str_contains($post->video_path, 'video'))
+                                @elseif ($post->video_path && str_contains($post->video_path, 'video'))
                                     <video controls class="w-full max-h-96">
                                         <source src="{{ asset('storage/' . $post->video_path) }}">
                                         Your browser does not support the video tag.
@@ -161,6 +161,7 @@
                                 @endif
                             </div>
                         @endif
+
                         {{-- Post Stats --}}
                         <div class="px-6 py-2 border-t border-gray-200/50 dark:border-gray-700/50">
                             <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
@@ -170,9 +171,8 @@
                                         @foreach ($post->likes->take(5) as $like)
                                             <div class="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800 flex-shrink-0"
                                                 title="{{ $like->user->name }}">
-                                                <span class="text-white font-semibold text-xs">
-                                                    {{ substr($like->user->name, 0, 1) }}
-                                                </span>
+                                                <span
+                                                    class="text-white font-semibold text-xs">{{ substr($like->user->name, 0, 1) }}</span>
                                             </div>
                                         @endforeach
                                         @if (count($post->likes) > 5)
@@ -227,18 +227,15 @@
                                     @csrf
                                     <div
                                         class="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                        <span class="text-white font-semibold text-sm">
-                                            {{ substr(auth()->user()->name, 0, 1) }}
-                                        </span>
+                                        <span
+                                            class="text-white font-semibold text-sm">{{ substr(auth()->user()->name, 0, 1) }}</span>
                                     </div>
                                     <div class="flex-1">
                                         <textarea name="content" placeholder="Write a comment..."
                                             class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             rows="1" required></textarea>
                                         <button type="submit"
-                                            class="mt-2 bg-blue-500 text-white px-4 py-1 rounded-lg text-sm hover:bg-blue-600 transition-colors">
-                                            Post
-                                        </button>
+                                            class="mt-2 bg-blue-500 text-white px-4 py-1 rounded-lg text-sm hover:bg-blue-600 transition-colors">Post</button>
                                     </div>
                                 </form>
                             </div>
@@ -251,9 +248,8 @@
                                         <div class="flex items-start space-x-3">
                                             <div
                                                 class="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                                <span class="text-white font-semibold text-sm">
-                                                    {{ substr($comment->user->name, 0, 1) }}
-                                                </span>
+                                                <span
+                                                    class="text-white font-semibold text-sm">{{ substr($comment->user->name, 0, 1) }}</span>
                                             </div>
                                             <div class="flex-1">
                                                 <div class="bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-2">
@@ -267,9 +263,7 @@
                                                         class="text-xs text-gray-500 dark:text-gray-400">{{ $comment->created_at->diffForHumans() }}</span>
                                                     @if ($comment->user_id == auth()->id())
                                                         <button onclick="deleteComment({{ $comment->id }})"
-                                                            class="text-xs text-red-500 hover:text-red-700">
-                                                            Delete
-                                                        </button>
+                                                            class="text-xs text-red-500 hover:text-red-700">Delete</button>
                                                     @endif
                                                 </div>
                                             </div>
@@ -281,6 +275,7 @@
                     </div>
                 @endforeach
             </div>
+
 
             {{-- Pagination --}}
             <div class="mt-8">
