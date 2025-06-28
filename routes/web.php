@@ -40,10 +40,13 @@ Route::middleware('auth')->group(function () {
         Route::delete('/remove/{id}', [FriendController::class, 'remove'])->name('remove');
     });
 
-
-    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
-    Route::get('/messages/{id}', [MessageController::class, 'show'])->name('messages.show');
-    Route::post('/messages/send', [MessageController::class, 'send'])->name('messages.send');
+    // Message routes
+    Route::prefix('messages')->name('messages.')->group(function () {
+        Route::get('/', [MessageController::class, 'index'])->name('index');
+        Route::get('/{id}', [MessageController::class, 'show'])->name('show');
+        Route::post('/send', [MessageController::class, 'send'])->name('send');
+        Route::get('/{message}/download', [MessageController::class, 'downloadFile'])->name('download');
+    });
 });
 
 require __DIR__ . '/auth.php';

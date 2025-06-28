@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Message extends Model
 {
@@ -11,6 +12,9 @@ class Message extends Model
         'recipient_id',
         'content',
         'type',
+        'file_path',
+        'file_name',
+        'file_size',
         'is_read',
         'read_at',
     ];
@@ -27,10 +31,13 @@ class Message extends Model
             'read_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
+            'file_size' => 'integer',
         ];
     }
+
     const TYPE_TEXT = 'text';
     const TYPE_IMAGE = 'image';
+    const TYPE_VIDEO = 'video';
     const TYPE_FILE = 'file';
 
     public function sender()
@@ -56,7 +63,6 @@ class Message extends Model
         return $query->where('is_read', false);
     }
 
-
     public function scopeBetweenUsers($query, $userId1, $userId2)
     {
         return $query->where(function ($query) use ($userId1, $userId2) {
@@ -67,5 +73,49 @@ class Message extends Model
                 $query->where('sender_id', $userId2)
                     ->where('recipient_id', $userId1);
             });
+    }
+
+    public function getFileUrlAttribute()
+    {
+        if ($this->file_path) {
+            return asset('storage/' . $this->file_path);
+        }
+        return null;
+    }
+
+    public function getFormattedFileSizeAttribute()
+    {
+        if (!$this->file_size) {
+            return null;
+        }
+
+        $bytes = $this->file_size;
+        $units = ['B', 'KB', 'MB', 'GB'];
+        
+        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
+            $bytes /= 1024;
+        }
+        
+        return round($bytes, 2) . ' ' . $units[$i];
+    }
+
+    public function isImage()
+    {
+        return $this->type === self::TYPE_IMAGE;
+    }
+
+    public function isVideo()
+    {
+        return $this->type === self::TYPE_VIDEO;
+    }
+
+    public function isFile()
+    {
+        return $this->type === self::TYPE_FILE;
+    }
+
+    public function hasFile()
+    {
+        return !empty($this->file_path);
     }
 }
