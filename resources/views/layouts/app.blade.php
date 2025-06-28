@@ -25,7 +25,7 @@
 
         <!-- Page Heading -->
         @isset($header)
-            <header class="fixed w-full top-0 left-0 dark:bg-gray-800 bg-white shadow" style="margin-top: 4rem;">
+            <header class="fixed w-full top-0 left-0 dark:bg-gray-800 bg-white shadow z-40" style="margin-top: 4rem;">
                 <div class="mx-auto py-6 px-4 sm:px-6 lg:px-8 max-w-7xl">
                     {{ $header }}
                 </div>
