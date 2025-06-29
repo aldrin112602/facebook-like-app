@@ -62,10 +62,14 @@
                                                     Message
                                                 </a>
                                                 {{-- Video Call Button --}}
-                                                <button onclick="initiateVideoCall({{ $friend->id }}, '{{ $friend->name }}')"
+                                                <button
+                                                    onclick="initiateVideoCall({{ $friend->id }}, '{{ $friend->name }}')"
                                                     class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 flex items-center space-x-1">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                                     </svg>
                                                     <span>Call</span>
                                                 </button>
@@ -281,7 +285,8 @@
                                     </h3>
 
                                     <p class="text-gray-600 dark:text-gray-400 max-w-lg mx-auto text-lg">
-                                       There are no friends to suggest at the moment nor pending or sent. Please try again later.
+                                        There are no friends to suggest at the moment nor pending or sent. Please try
+                                        again later.
                                     </p>
                                 </div>
                             </div>
@@ -304,14 +309,18 @@
                         <p class="text-gray-500">Incoming video call...</p>
                     </div>
                     <div class="flex space-x-4 justify-center">
-                        <button onclick="answerCall(true)" class="bg-green-500 text-white px-6 py-3 rounded-full hover:bg-green-600">
+                        <button onclick="answerCall(true)"
+                            class="bg-green-500 text-white px-6 py-3 rounded-full hover:bg-green-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                             </svg>
                         </button>
-                        <button onclick="answerCall(false)" class="bg-red-500 text-white px-6 py-3 rounded-full hover:bg-red-600">
+                        <button onclick="answerCall(false)"
+                            class="bg-red-500 text-white px-6 py-3 rounded-full hover:bg-red-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 3l1.5 1.5m0 0L16 16l2.5 2.5M4.5 4.5L16 16"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 3l1.5 1.5m0 0L16 16l2.5 2.5M4.5 4.5L16 16" />
                             </svg>
                         </button>
                     </div>
@@ -320,83 +329,258 @@
         </div>
     </div>
 
+    // Enhanced script with debugging for call popup
     <script>
         let currentCallId = null;
         let currentCallerId = null;
 
+        // Debug function to check connection status
+        function debugEchoConnection() {
+            console.log('=== Echo Debug Info ===');
+            console.log('Window Echo exists:', !!window.Echo);
+            if (window.Echo) {
+                console.log('Echo connector:', window.Echo.connector);
+                console.log('Echo options:', window.Echo.options);
+            }
+            console.log('User ID:', {{ auth()->id() }});
+            console.log('======================');
+        }
+
         // Initialize Pusher for receiving calls
         window.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - Setting up Echo listeners');
+            debugEchoConnection();
+
             if (window.Echo) {
-                window.Echo.private('user.{{ auth()->id() }}')
-                    .listen('.video.call.offer', (e) => {
+                try {
+                    const channel = window.Echo.private('user.{{ auth()->id() }}');
+                    console.log('Private channel created:', channel);
+
+                    // Listen for video call offers
+                    channel.listen('.video.call.offer', (e) => {
+                        console.log('=== Received video call offer ===');
+                        console.log('Event data:', e);
+                        console.log('Call ID:', e.call_id);
+                        console.log('Caller:', e.caller);
+                        console.log('================================');
                         showIncomingCall(e);
                     });
+
+                    // Listen for call end events
+                    channel.listen('.video.call.end', (e) => {
+                        console.log('Call ended:', e);
+                        hideCallModal();
+                    });
+
+                    // Test if channel is working
+                    channel.listen('.test', (e) => {
+                        console.log('Test event received:', e);
+                    });
+
+                    console.log('Echo listeners set up successfully');
+                } catch (error) {
+                    console.error('Error setting up Echo listeners:', error);
+                }
+            } else {
+                console.error('Echo is not available! Make sure Laravel Echo is properly initialized.');
             }
         });
 
+        // Enhanced initiate call function with debugging
         function initiateVideoCall(friendId, friendName) {
-            fetch('{{ route("video.call.initiate") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({
-                    friend_id: friendId
+            console.log(`Initiating call to ${friendName} (ID: ${friendId})`);
+
+            fetch('{{ route('video.call.initiate') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        friend_id: friendId
+                    })
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Redirect to call page
-                    window.location.href = `/video-call/${data.call_id}`;
-                }
-            })
-            .catch(error => {
-                console.error('Error initiating call:', error);
-                alert('Failed to initiate call');
-            });
+                .then(response => {
+                    console.log('Call initiate response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Call initiate response data:', data);
+                    if (data.success) {
+                        console.log('Redirecting to call page:', `/video-call/${data.call_id}`);
+                        window.location.href = `/video-call/${data.call_id}`;
+                    } else {
+                        console.error('Call initiation failed:', data.message || 'Unknown error');
+                        alert('Failed to initiate call: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error initiating call:', error);
+                    alert('Failed to initiate call: Network error');
+                });
         }
 
+        // Enhanced show incoming call with debugging
         function showIncomingCall(callData) {
+            console.log('=== Showing incoming call ===');
+            console.log('Call data:', callData);
+
             currentCallId = callData.call_id;
             currentCallerId = callData.caller.id;
-            
-            document.getElementById('callerName').textContent = callData.caller.name;
-            
-            if (callData.caller.avatar) {
-                document.getElementById('callerAvatar').innerHTML = `<img src="${callData.caller.avatar}" alt="${callData.caller.name}" class="w-20 h-20 rounded-full object-cover">`;
+
+            console.log('Set currentCallId:', currentCallId);
+            console.log('Set currentCallerId:', currentCallerId);
+
+            // Update caller name
+            const callerNameElement = document.getElementById('callerName');
+            if (callerNameElement) {
+                callerNameElement.textContent = callData.caller.name;
+                console.log('Updated caller name:', callData.caller.name);
             } else {
-                document.getElementById('callerAvatar').innerHTML = `<div class="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center"><span class="text-gray-600 font-semibold text-2xl">${callData.caller.name.charAt(0)}</span></div>`;
+                console.error('callerName element not found');
             }
-            
-            document.getElementById('callModal').classList.remove('hidden');
+
+            // Update caller avatar
+            const callerAvatarElement = document.getElementById('callerAvatar');
+            if (callerAvatarElement) {
+                if (callData.caller.avatar) {
+                    callerAvatarElement.innerHTML =
+                        `<img src="${callData.caller.avatar}" alt="${callData.caller.name}" class="w-20 h-20 rounded-full object-cover">`;
+                } else {
+                    callerAvatarElement.innerHTML =
+                        `<div class="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center"><span class="text-gray-600 font-semibold text-2xl">${callData.caller.name.charAt(0)}</span></div>`;
+                }
+                console.log('Updated caller avatar');
+            } else {
+                console.error('callerAvatar element not found');
+            }
+
+            // Show modal
+            const callModal = document.getElementById('callModal');
+            if (callModal) {
+                callModal.classList.remove('hidden');
+                console.log('Call modal shown');
+            } else {
+                console.error('callModal element not found');
+            }
+
+            console.log('=== Incoming call setup complete ===');
         }
 
+        // Enhanced answer call function
         function answerCall(accepted) {
-            fetch('{{ route("video.call.answer") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({
-                    call_id: currentCallId,
-                    caller_id: currentCallerId,
-                    accepted: accepted
+            console.log(`Answering call: ${accepted ? 'ACCEPTED' : 'DECLINED'}`);
+            console.log('Current call ID:', currentCallId);
+            console.log('Current caller ID:', currentCallerId);
+
+            if (!currentCallId || !currentCallerId) {
+                console.error('Missing call ID or caller ID');
+                hideCallModal();
+                return;
+            }
+
+            fetch('{{ route('video.call.answer') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        call_id: currentCallId,
+                        caller_id: currentCallerId,
+                        accepted: accepted
+                    })
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('callModal').classList.add('hidden');
-                if (data.success && accepted && data.redirect) {
-                    window.location.href = data.redirect;
-                }
-            })
-            .catch(error => {
-                console.error('Error answering call:', error);
-                document.getElementById('callModal').classList.add('hidden');
-            });
+                .then(response => {
+                    console.log('Answer call response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Answer call response data:', data);
+                    hideCallModal();
+
+                    if (data.success && accepted && data.redirect) {
+                        console.log('Redirecting to call page:', data.redirect);
+                        window.location.href = data.redirect;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error answering call:', error);
+                    hideCallModal();
+                    alert('Error answering call');
+                });
         }
+
+        // Helper function to hide call modal
+        function hideCallModal() {
+            const callModal = document.getElementById('callModal');
+            if (callModal) {
+                callModal.classList.add('hidden');
+                console.log('Call modal hidden');
+            }
+
+            // Reset state
+            currentCallId = null;
+            currentCallerId = null;
+        }
+
+        // Test function to simulate incoming call (for debugging)
+        function testIncomingCall() {
+            console.log('Testing incoming call...');
+            const testData = {
+                call_id: 'test-123',
+                caller: {
+                    id: 999,
+                    name: 'Test User',
+                    avatar: null
+                }
+            };
+            showIncomingCall(testData);
+        }
+
+        // Add test button (remove in production)
+        window.addEventListener('DOMContentLoaded', function() {
+            // Add a test button to debug
+            const testButton = document.createElement('button');
+            testButton.textContent = 'Test Incoming Call';
+            testButton.className = 'fixed bottom-4 right-4 bg-purple-500 text-white px-4 py-2 rounded z-50';
+            testButton.onclick = testIncomingCall;
+            document.body.appendChild(testButton);
+
+            // Debug Echo connection after a short delay
+            setTimeout(() => {
+                debugEchoConnection();
+            }, 2000);
+        });
+
+        // Global error handler for debugging
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+        });
+
+        // Check if all required elements exist
+        function checkRequiredElements() {
+            const requiredElements = ['callModal', 'callerName', 'callerAvatar'];
+            const missing = [];
+
+            requiredElements.forEach(id => {
+                if (!document.getElementById(id)) {
+                    missing.push(id);
+                }
+            });
+
+            if (missing.length > 0) {
+                console.error('Missing required elements:', missing);
+                return false;
+            }
+
+            console.log('All required elements found');
+            return true;
+        }
+
+        // Run element check after DOM loads
+        window.addEventListener('DOMContentLoaded', function() {
+            setTimeout(checkRequiredElements, 1000);
+        });
     </script>
 </x-app-layout>
