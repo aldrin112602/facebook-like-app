@@ -61,6 +61,14 @@
                                                     class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
                                                     Message
                                                 </a>
+                                                {{-- Video Call Button --}}
+                                                <button onclick="initiateVideoCall({{ $friend->id }}, '{{ $friend->name }}')"
+                                                    class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 flex items-center space-x-1">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                                    </svg>
+                                                    <span>Call</span>
+                                                </button>
                                                 <form action="{{ route('friends.remove', $friend->id) }}"
                                                     method="POST" class="inline">
                                                     @csrf
@@ -284,4 +292,111 @@
             </div>
         </div>
     </div>
+
+    {{-- Call Modal --}}
+    <div id="callModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+                <div class="text-center">
+                    <div class="mb-4">
+                        <div class="w-20 h-20 bg-gray-300 rounded-full mx-auto mb-4" id="callerAvatar"></div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100" id="callerName"></h3>
+                        <p class="text-gray-500">Incoming video call...</p>
+                    </div>
+                    <div class="flex space-x-4 justify-center">
+                        <button onclick="answerCall(true)" class="bg-green-500 text-white px-6 py-3 rounded-full hover:bg-green-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                            </svg>
+                        </button>
+                        <button onclick="answerCall(false)" class="bg-red-500 text-white px-6 py-3 rounded-full hover:bg-red-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 3l1.5 1.5m0 0L16 16l2.5 2.5M4.5 4.5L16 16"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentCallId = null;
+        let currentCallerId = null;
+
+        // Initialize Pusher for receiving calls
+        window.addEventListener('DOMContentLoaded', function() {
+            if (window.Echo) {
+                window.Echo.private('user.{{ auth()->id() }}')
+                    .listen('.video.call.offer', (e) => {
+                        showIncomingCall(e);
+                    });
+            }
+        });
+
+        function initiateVideoCall(friendId, friendName) {
+            fetch('{{ route("video.call.initiate") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    friend_id: friendId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirect to call page
+                    window.location.href = `/video-call/${data.call_id}`;
+                }
+            })
+            .catch(error => {
+                console.error('Error initiating call:', error);
+                alert('Failed to initiate call');
+            });
+        }
+
+        function showIncomingCall(callData) {
+            currentCallId = callData.call_id;
+            currentCallerId = callData.caller.id;
+            
+            document.getElementById('callerName').textContent = callData.caller.name;
+            
+            if (callData.caller.avatar) {
+                document.getElementById('callerAvatar').innerHTML = `<img src="${callData.caller.avatar}" alt="${callData.caller.name}" class="w-20 h-20 rounded-full object-cover">`;
+            } else {
+                document.getElementById('callerAvatar').innerHTML = `<div class="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center"><span class="text-gray-600 font-semibold text-2xl">${callData.caller.name.charAt(0)}</span></div>`;
+            }
+            
+            document.getElementById('callModal').classList.remove('hidden');
+        }
+
+        function answerCall(accepted) {
+            fetch('{{ route("video.call.answer") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    call_id: currentCallId,
+                    caller_id: currentCallerId,
+                    accepted: accepted
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('callModal').classList.add('hidden');
+                if (data.success && accepted && data.redirect) {
+                    window.location.href = data.redirect;
+                }
+            })
+            .catch(error => {
+                console.error('Error answering call:', error);
+                document.getElementById('callModal').classList.add('hidden');
+            });
+        }
+    </script>
 </x-app-layout>

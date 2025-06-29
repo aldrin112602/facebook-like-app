@@ -7,7 +7,7 @@ use App\Http\Controllers\LikeController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\FriendController;
 use App\Http\Controllers\MessageController;
-
+use App\Http\Controllers\VideoCallController;
 
 
 Route::get('/', function () {
@@ -47,6 +47,16 @@ Route::middleware('auth')->group(function () {
         Route::post('/send', [MessageController::class, 'send'])->name('send');
         Route::get('/{message}/download', [MessageController::class, 'downloadFile'])->name('download');
     });
+
+
+    // Video call routes
+    Route::post('/video-call/initiate', [VideoCallController::class, 'initiate'])->name('video.call.initiate');
+    Route::post('/video-call/answer', [VideoCallController::class, 'answer'])->name('video.call.answer');
+    Route::get('/video-call/{call_id}', [VideoCallController::class, 'show'])->name('video.call');
+    Route::post('/video-call/candidate', [VideoCallController::class, 'sendCandidate'])->name('video.call.candidate');
+    Route::post('/video-call/offer', [VideoCallController::class, 'sendOffer'])->name('video.call.offer');
+    Route::post('/video-call/answer-webrtc', [VideoCallController::class, 'sendAnswer'])->name('video.call.answer.webrtc');
+    Route::post('/video-call/end', [VideoCallController::class, 'endCall'])->name('video.call.end');
 });
 
 require __DIR__ . '/auth.php';
