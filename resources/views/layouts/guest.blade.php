@@ -113,14 +113,11 @@
                     <!-- Logo -->
                     <div class="flex items-center space-x-2">
                         <div
-                            class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path
-                                    d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
-                            </svg>
+                            class="w-10 h-10 bg-gradient-to-r from-blue-50 to-purple-100 rounded-xl flex items-center justify-center">
+                            @include('components.application-logo')
                         </div>
                         <h1
-                            class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                            class="md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-sm">
                             SocialConnect
                         </h1>
                     </div>
@@ -138,8 +135,17 @@
                             </a>
                         @else
                             <a href="{{ route('homepage') }}"
-                                class="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-full hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg">
-                                Back to Home Page
+                                class="inline-flex items-center md:px-6 md:py-2.5 bg-gradient-to-r md:from-blue-500 to-purple-900 from-blue-900 md:to-purple-600 text-white font-medium rounded-full hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 md:shadow-lg text-sm px-2 py-1">
+                                <span class="hidden md:inline-block">Back to home</span>
+                                <span class="inline-block md:hidden mb-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M3 9.75L12 3l9 6.75v10.5a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 20.25V9.75z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 22.5V12h6v10.5" />
+                                    </svg>
+
+                                </span>
                             </a>
 
                         @endauth
@@ -193,12 +199,12 @@
                 </div>
 
                 <!-- Card Body -->
-                <div class="p-8">
+                <div class="p-8 dark:bg-gray-900">
                     {{ $slot }}
                 </div>
 
                 <!-- Card Footer -->
-                <div class="px-8 pb-6">
+                <div class="px-8 pb-6 dark:bg-gray-900">
                     <div class="flex items-center justify-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                         <span class="flex items-center">
                             <svg class="w-4 h-4 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20">

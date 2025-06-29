@@ -30,7 +30,7 @@
                             @if ($friends->count() > 0)
                                 <div class="space-y-4">
                                     @foreach ($friends as $friend)
-                                        <div class="border rounded-lg p-4 flex items-center justify-between">
+                                        <div class="border rounded-lg p-4 block md:flex items-center justify-between">
                                             <div class="flex items-center space-x-3">
                                                 <div class="relative">
                                                     @if ($friend->avatar)
@@ -56,7 +56,7 @@
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div class="flex space-x-2">
+                                            <div class="flex space-x-2 mt-2 md:mt-0">
                                                 <a href="{{ route('messages.show', $friend->id) }}"
                                                     class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
                                                     Message
@@ -64,7 +64,7 @@
                                                 {{-- Video Call Button --}}
                                                 <button
                                                     onclick="initiateVideoCall({{ $friend->id }}, '{{ $friend->name }}')"
-                                                    class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 flex items-center space-x-1">
+                                                    class="bg-green-500 hidden text-white px-3 py-1 rounded text-sm hover:bg-green-600 flex items-center space-x-1">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
