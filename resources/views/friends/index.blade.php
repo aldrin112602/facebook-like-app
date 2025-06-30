@@ -64,7 +64,7 @@
                                                 {{-- Video Call Button --}}
                                                 <button
                                                     onclick="initiateVideoCall({{ $friend->id }}, '{{ $friend->name }}')"
-                                                    class="bg-green-500 hidden text-white px-3 py-1 rounded text-sm hover:bg-green-600 flex items-center space-x-1">
+                                                    class="bg-green-500 flex text-white px-3 py-1 rounded text-sm hover:bg-green-600 items-center space-x-1">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -328,8 +328,6 @@
             </div>
         </div>
     </div>
-
-    // Enhanced script with debugging for call popup
     <script>
         let currentCallId = null;
         let currentCallerId = null;
@@ -524,34 +522,7 @@
             currentCallerId = null;
         }
 
-        // Test function to simulate incoming call (for debugging)
-        function testIncomingCall() {
-            console.log('Testing incoming call...');
-            const testData = {
-                call_id: 'test-123',
-                caller: {
-                    id: 999,
-                    name: 'Test User',
-                    avatar: null
-                }
-            };
-            showIncomingCall(testData);
-        }
-
-        // Add test button (remove in production)
-        window.addEventListener('DOMContentLoaded', function() {
-            // Add a test button to debug
-            const testButton = document.createElement('button');
-            testButton.textContent = 'Test Incoming Call';
-            testButton.className = 'fixed bottom-4 right-4 bg-purple-500 text-white px-4 py-2 rounded z-50';
-            testButton.onclick = testIncomingCall;
-            document.body.appendChild(testButton);
-
-            // Debug Echo connection after a short delay
-            setTimeout(() => {
-                debugEchoConnection();
-            }, 2000);
-        });
+        
 
         // Global error handler for debugging
         window.addEventListener('error', function(e) {
